@@ -1,0 +1,6 @@
+---
+
+cluster:
+  config:
+    repos:
+      epel: "http://fedora-mirror.rbc.ru/pub/epel/7Server/x86_64/"

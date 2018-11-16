@@ -1,0 +1,98 @@
+---
+##################################################
+#                    CLUSTER
+##################################################
+- type: cluster
+  name: GlasterFS
+  version: 0.5
+  description: GlastesFS service
+
+  config:
+    repos:
+      epel:
+        type: string
+        default: "https://download.fedoraproject.org/pub/epel/7/x86_64/"
+
+  actions:
+    install: &common_action
+      type: job
+      script_type: ansible
+      script: setup_gluster.yml
+      params:
+        ansible_tags: install
+      states:
+        available:
+          - created
+          - removed
+        on_success: running
+        on_fail: failure
+
+    reinstall:
+      <<: *common_action
+      states:
+        available:
+          - running
+          - stopped
+          - failure
+          - stopped
+        on_success: running
+        on_fail: failure
+
+    remove:
+      <<: *common_action
+      params:
+        ansible_tags: remove
+      states:
+        available:
+          - running
+          - stopped
+          - failure
+        on_success: removed
+        on_fail: failure
+
+    stop:
+      <<: *common_action
+      params:
+        ansible_tags: stop
+      states:
+        available:
+          - running
+        on_success: stopped
+        on_fail: failure
+
+    start:
+      <<: *common_action
+      params:
+        ansible_tags: start
+      states:
+        available:
+          - failure
+          - stopped
+        on_success: running
+        on_fail: failure
+
+##################################################
+#                      GLASTERFS
+##################################################
+- type: service
+  name: gluster
+  description: GlasterFS
+  version: 1
+
+  config:
+    data:
+      mount_dir:         
+        type: string
+        default: "/opt/glusterfs"
+      replicas:
+        type: string
+        default: "3"
+      volume:
+        type: string
+        default: "gv0"
+      brick_dirs:
+        type: string
+        default: "/srv/gluster/brick1,/srv/gluster/brick2"       
+
+  components:
+    glasterfs_server:

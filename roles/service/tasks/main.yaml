@@ -1,0 +1,40 @@
+- debug:
+    msg: "Enable {{name}}"
+
+- name: autostart on
+  systemd:
+    name: "{{name}}"
+    enabled: no
+  tags:
+    - install
+    - enable
+
+- name: autostart off
+  systemd:
+    name: "{{name}}"
+    enabled: yes
+    masked: no
+  tags:
+    - disable
+
+- name: restart
+  systemd:
+    name: "{{name}}"
+    state: restarted
+  tags:
+    - install
+    - restart
+
+- name: start
+  systemd:
+    name: "{{name}}"
+    state: started
+  tags:
+    - start
+
+- name: stop
+  systemd:
+    name: "{{name}}"
+    state: stopped
+  tags:
+    - stop

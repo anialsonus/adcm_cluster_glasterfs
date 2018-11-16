@@ -1,0 +1,89 @@
+---
+
+- name: Install epel release
+  tags: [install]
+  yum: name=centos-release-gluster310.noarch state=installed
+
+- name: Install glusterfs server packages (CentOS)
+  tags: [install]
+  yum: name={{item}} state=installed
+  with_items:
+    - glusterfs-server
+    - glusterfs-client
+    - attr
+
+- name: Ensure the GlusterFS service is running (CentOS)
+  tags: [install]
+  service: name=glusterd state=started
+
+- name: Create brick gluster_brick_dirs
+  tags: [install]
+  file:
+    path: "{{item}}"
+    state: directory
+    mode: 0755
+  with_items: "{{gluster_brick_dirs}}"
+
+- name: Create Gluster volume
+  tags: [install]
+  gluster_volume:
+    state: present
+    force: true
+    name: "{{services.gluster.config.data.volume}}"
+    bricks: "{{services.gluster.config.data.brick_dirs}}"
+    #cluster: "192.168.1.41,192.168.1.33,192.168.1.61"
+    cluster: "{{ groups['all'] | map('extract', hostvars, ['ansible_host']) | join(',') }}"
+    replicas: "{{services.gluster.config.data.replicas}}"
+  run_once: true
+
+- name: Start Gluster volume
+  tags: [install]
+  gluster_volume: 
+    state: started
+    name: "{{services.gluster.config.data.volume}}" 
+
+- name: Create mount directory
+  tags: [install]
+  file:
+    path: "{{ services.gluster.config.data.mount_dir }}"
+    state: directory
+    mode: 0755
+
+
+- name: Add to fstab
+  tags: [install]
+  lineinfile:
+    path: /etc/fstab
+    line: '{{ansible_host}}:/{{services.gluster.config.data.volume}} {{services.gluster.config.data.mount_dir}} glusterfs defaults,_netdev 0 0'
+
+- name: mount glusterfs
+  tags: [install]
+  shell: mount -a
+  args:
+    warn: no
+
+
+- name: remove from fstab
+  tags: [remove]
+  lineinfile: dest=/etc/fstab
+              regexp='{{ansible_host}}:/{{services.gluster.config.data.volume}} {{services.gluster.config.data.mount_dir}} glusterfs defaults,_netdev 0 0'
+              state=absent
+
+- name: umount glusterfs
+  tags: [remove]
+  shell: umount {{services.gluster.config.data.mount_dir}}
+  args:
+    warn: no
+    
+- name: detele mount directory
+  tags: [remove]
+  file:
+    path: '{{services.gluster.config.data.mount_dir}}'
+    state: absent
+
+- name: Remove glusterfs server packages (CentOS)
+  tags: [remove]
+  yum: name={{item}} state=absent
+  with_items:
+    - glusterfs-server
+    - glusterfs-client

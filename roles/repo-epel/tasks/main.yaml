@@ -1,0 +1,9 @@
+- name: Add EPEL repo
+  tags: [install]
+  yum_repository:
+    name: epel
+    description: EPEL
+    file: epel
+    baseurl: "{{ cluster.config.repos.epel }}"
+    enabled: yes
+    gpgcheck: no

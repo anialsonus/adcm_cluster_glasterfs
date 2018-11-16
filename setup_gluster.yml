@@ -1,0 +1,19 @@
+---
+
+- name: EPEL repo
+  hosts: all
+  become: true
+#  gather_facts: no
+  roles:
+    - roles/repo-epel
+
+- name: glasterfs
+  hosts: all
+  become: true
+  gather_facts: no
+  roles:
+    - roles/gluster
+  vars:
+  - gluster_brick_dirs:
+      - /srv/gluster/brick1
+      - /srv/gluster/brick2
