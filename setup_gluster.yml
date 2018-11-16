@@ -13,7 +13,3 @@
   gather_facts: no
   roles:
     - roles/gluster
-  vars:
-  - gluster_brick_dirs:
-      - /srv/gluster/brick1
-      - /srv/gluster/brick2
